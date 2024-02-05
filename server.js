@@ -25,7 +25,7 @@ const DataModel = mongoose.model('Data', cloudDataSchema);
 
 const uri = "mongodb+srv://hamada99:hamada99@cluster0.iszcqvt.mongodb.net/?retryWrites=true&w=majority"
 const localUri = "mongodb://localhost:27017/CloudData"
-mongoose.connect(localUri, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 
 
