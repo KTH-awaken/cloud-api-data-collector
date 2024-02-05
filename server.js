@@ -134,4 +134,4 @@ function fetchDataAndSave() {
 
 
 fetchDataAndSave();
-setInterval(fetchDataAndSave, 2000);
+setInterval(fetchDataAndSave, 1000);
