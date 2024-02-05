@@ -19,7 +19,7 @@ const cloudDataSchema = new mongoose.Schema({
 
 const DataModel = mongoose.model('Data', cloudDataSchema);
 
-const uri = "mongodb+srv://hamada99:hamada99@cluster0.iszcqvt.mongodb.net/?retryWrites=true&w=majority/cloud-api-data"
+const uri = "mongodb+srv://hamada99:hamada99@cluster0.iszcqvt.mongodb.net/?retryWrites=true&w=majority/cbh-data"
 mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 
