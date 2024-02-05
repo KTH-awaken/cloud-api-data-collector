@@ -15,12 +15,17 @@ const cloudDataSchema = new mongoose.Schema({
     cpuCoreTotal: Number,
     cpuCoreUsed: Number,
     gpuTotal: Number,
+    totalPowerConsumption: Number,
+    cpuPowerConsumption: Number,    
+    gpuPowerConsumption: Number,
+    ramPowerConsumption: Number
 }, { timestamps: true });
 
 const DataModel = mongoose.model('Data', cloudDataSchema);
 
 const uri = "mongodb+srv://hamada99:hamada99@cluster0.iszcqvt.mongodb.net/?retryWrites=true&w=majority"
-mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const localUri = "mongodb://localhost:27017/CloudData"
+mongoose.connect(localUri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 
 
@@ -58,6 +63,46 @@ function mapCapData(jsonData) {
     }
 }
 
+
+function calculatePowerConsumption(statusData, capacitiesData) {
+    // Constants for power consumption estimates (in watts)
+    const avgPowerCPU = 95;  // Average power for CPU under full load
+    const avgPowerGPU = 200; // Average power for GPU under full load
+    const avgPowerRAM = 5;   // Average power for RAM under full load
+    const idlePowerCPU = 10;
+    const idlePowerGPU = 10;
+    const idlePowerRAM = 2;
+
+
+    let usage = {
+        totalPowerConsumption: 0,
+        cpuPowerConsumption: 0,
+        gpuPowerConsumption: 0,
+        ramPowerConsumption: 0
+    }
+
+    // let totalPowerConsumption = 0;
+
+    // Assuming statusData and capacitiesData are arrays with one element each
+    const statusHosts = statusData[0].status.hosts;
+    const capacityHosts = capacitiesData[0].capacities.hosts;
+
+    statusHosts.forEach(host => {
+        const cpuLoadPercentage = host.cpu.load.main / 100; // Convert to fraction
+        const matchingHost = capacityHosts.find(h => h.id === host.id);
+        const gpuCount = matchingHost ? matchingHost.gpu.count : 0;
+
+        const powerCPU = (cpuLoadPercentage * avgPowerCPU) / 1000; //delat med 1000 för att få kW
+        const powerGPU = (gpuCount * avgPowerGPU) / 1000; // Assuming full load for GPUs delat med 1000 för att få kW
+
+        // Ensure the values are treated as numbers
+        usage.cpuPowerConsumption += parseFloat(powerCPU.toFixed(2));
+        usage.gpuPowerConsumption += parseFloat(powerGPU.toFixed(2));
+        usage.totalPowerConsumption += powerCPU + powerGPU; // This should be fine as it's already a numerical addition
+    });
+    return usage;
+}
+
 function fetchDataAndSave() {
     const statusUrl = 'https://api.cloud.cbh.kth.se/landing/v2/status?n=1';
     const capacitiesUrl = 'https://api.cloud.cbh.kth.se/landing/v2/capacities';
@@ -68,10 +113,11 @@ function fetchDataAndSave() {
     ]).then(([statusResponse, capacitiesResponse]) => {
         const mappedHostData = mapHostData(statusResponse.data);
         const mappedCapData = mapCapData(capacitiesResponse.data);
-
+        const powerConsumption = calculatePowerConsumption(statusResponse.data, capacitiesResponse.data);
         const dataToSave = {
             ...mappedHostData,
             ...mappedCapData,
+            ...powerConsumption,
             timestamp: new Date() // Capture the current time
         };
 
