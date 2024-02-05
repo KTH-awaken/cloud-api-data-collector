@@ -85,5 +85,6 @@ function fetchDataAndSave() {
     });
 }
 
+
 fetchDataAndSave();
 setInterval(fetchDataAndSave, 2000);
